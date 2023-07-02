@@ -1,0 +1,809 @@
+/*
+Controls:
+Mic -> Say "Up", "Down", "Left" or "Right" to move, "Yes" to restart
+Arrow Key -> Arrow Keys for movement, Enter to restart
+*/
+
+let classifier;
+
+const options = { probabilityThreshold: 0.975 };
+
+let label;
+let confidence;
+let xPos, yPos;
+let sizeWidth, sizeHeight;
+let boardLocX, boardLocY;
+let car1LocX,
+  car1LocY,
+  car1BoardX,
+  car1BoardY,
+  car1Orientation,
+  car1Color,
+  car1Active;
+let car2LocX,
+  car2LocY,
+  car2BoardX,
+  car2BoardY,
+  car2Orientation,
+  car2Color,
+  car2Active;
+let car3LocX,
+  car3LocY,
+  car3BoardX,
+  car3BoardY,
+  car3Orientation,
+  car3Color,
+  car3Active;
+let car4LocX,
+  car4LocY,
+  car4BoardX,
+  car4BoardY,
+  car4Orientation,
+  car4Color,
+  car4Active;
+let car5LocX,
+  car5LocY,
+  car5BoardX,
+  car5BoardY,
+  car5Orientation,
+  car5Color,
+  car5Active;
+let StreetTop, StreetMiddle, StreetBottom, StreetSidewalk;
+let FrogUp, FrogDown, FrogLeft, FrogRight;
+let FrogOrientation = "up";
+let CarOrangeRight, CarOrangeLeft;
+let CarBlueRight, CarBlueLeft;
+let score = 0;
+let hop_sfx;
+let score_sfx;
+let gameover_sfx;
+let fr = 1;
+let randomOrientation, randomColor, randomCarLane;
+let gameover;
+let active_cars;
+let key_move;
+let mic_controls;
+let reset_player;
+
+function preload() {
+  classifier = ml5.soundClassifier("SpeechCommands18w", options);
+  StreetTop = loadImage("FroggerTopStreet.png");
+  StreetMiddle = loadImage("FroggerMiddleStreet.png");
+  StreetBottom = loadImage("FroggerBottomStreet.png");
+  StreetSidewalk = loadImage("FroggerSidewalk.png");
+  FrogUp = loadImage("FroggerFrogUp.png");
+  FrogDown = loadImage("FroggerFrogDown.png");
+  FrogLeft = loadImage("FroggerFrogLeft.png");
+  FrogRight = loadImage("FroggerFrogRight.png");
+  hop_sfx = loadSound("hop.wav");
+  score_sfx = loadSound("score_up.wav");
+  gameover_sfx = loadSound("gameover.wav");
+  CarOrangeRight = loadImage("CarOrangeRight.png");
+  CarOrangeLeft = loadImage("CarOrangeLeft.png");
+  CarBlueRight = loadImage("CarBlueRight.png");
+  CarBlueLeft = loadImage("CarBlueLeft.png");
+}
+
+function setup() {
+  createCanvas(900, 750);
+  background(150);
+  xPos = 20 + (4 * windowWidth) / 9.8;
+  yPos = 20 + (6 * windowWidth) / 9.9;
+  boardLocX = 4;
+  boardLocY = 6;
+
+  // cars
+  car1Active = false;
+  car2Active = false;
+  car3Active = false;
+  car4Active = false;
+  car5Active = false;
+
+  // key control
+  key_move = true;
+  mic_control = true;
+
+  setUpStreet();
+  gameover = false;
+  active_cars = 0;
+  score = 0;
+  // Classify the sound from microphone in real time
+  classifier.classify(gotResult);
+  frameRate(fr);
+}
+
+function draw() {
+  if (!gameover) {
+    setUpStreet();
+    randomCarLane = random(1, 120);
+    if (
+      randomCarLane >= 1 &&
+      randomCarLane < 20 &&
+      !car1Active &&
+      active_cars < score / 4 + 1
+    ) {
+      car1Active = true;
+      active_cars++;
+      randomColor = round(random(1, 2));
+
+      if (randomColor == 1) {
+        car1Color = "blue";
+      } else {
+        car1Color = "orange";
+      }
+      randomOrientation = round(random(1, 2));
+      if (randomOrientation == 1) {
+        car1Orientation = "right";
+        car1LocX = 20 + (-1 * windowWidth) / 11;
+        car1BoardX = 0;
+        car1LocY = 20 + (1 * windowWidth) / 8.5;
+        car1BoardY = 1;
+      } else {
+        car1Orientation = "left";
+        car1LocX = 20 + (9 * windowWidth) / 11.1;
+        car1BoardX = 7;
+        car1LocY = 20 + (1 * windowWidth) / 8.5;
+        car1BoardY = 1;
+      }
+    } else if (
+      randomCarLane >= 20 &&
+      randomCarLane < 40 &&
+      !car2Active &&
+      active_cars < score / 4 + 1
+    ) {
+      car2Active = true;
+      active_cars++;
+      randomColor = round(random(1, 2));
+
+      if (randomColor == 1) {
+        car2Color = "blue";
+      } else {
+        car2Color = "orange";
+      }
+      randomOrientation = round(random(1, 2));
+      if (randomOrientation == 1) {
+        car2Orientation = "right";
+        car2LocX = 20 + (-1 * windowWidth) / 11;
+        car2BoardX = 0;
+        car2LocY = 20 + (2 * windowWidth) / 9;
+        car2BoardY = 2;
+      } else {
+        car2Orientation = "left";
+        car2LocX = 20 + (9 * windowWidth) / 11.1;
+        car2BoardX = 7;
+        car2LocY = 20 + (2 * windowWidth) / 9;
+        car2BoardY = 2;
+      }
+    } else if (
+      randomCarLane >= 40 &&
+      randomCarLane < 60 &&
+      !car3Active &&
+      active_cars < score / 4 + 1
+    ) {
+      car3Active = true;
+      active_cars++;
+      randomColor = round(random(1, 2));
+
+      if (randomColor == 1) {
+        car3Color = "blue";
+      } else {
+        car3Color = "orange";
+      }
+      randomOrientation = round(random(1, 2));
+      if (randomOrientation == 1) {
+        car3Orientation = "right";
+        car3LocX = 20 + (-1 * windowWidth) / 11;
+        car3BoardX = 0;
+        car3LocY = 20 + (3 * windowWidth) / 9.5;
+        car3BoardY = 3;
+      } else {
+        car3Orientation = "left";
+        car3LocX = 20 + (9 * windowWidth) / 9.9;
+        car3BoardX = 8;
+        car3LocY = 20 + (3 * windowWidth) / 9.5;
+        car3BoardY = 3;
+      }
+    } else if (
+      randomCarLane >= 60 &&
+      randomCarLane < 80 &&
+      !car4Active &&
+      active_cars < score / 4 + 1
+    ) {
+      car4Active = true;
+      active_cars++;
+      randomColor = round(random(1, 2));
+
+      if (randomColor == 1) {
+        car4Color = "blue";
+      } else {
+        car4Color = "orange";
+      }
+      randomOrientation = round(random(1, 2));
+      if (randomOrientation == 1) {
+        car4Orientation = "right";
+        car4LocX = 20 + (-1 * windowWidth) / 11;
+        car4BoardX = 0;
+        car4LocY = 20 + (4 * windowWidth) / 9.5;
+        car4BoardY = 4;
+      } else {
+        car4Orientation = "left";
+        car4LocX = 20 + (9 * windowWidth) / 11.1;
+        car4BoardX = 7;
+        car4LocY = 20 + (4 * windowWidth) / 9.5;
+        car4BoardY = 4;
+      }
+    } else if (
+      randomCarLane >= 80 &&
+      randomCarLane <= 100 &&
+      !car5Active &&
+      active_cars < score / 4 + 1
+    ) {
+      car5Active = true;
+      active_cars++;
+      randomColor = round(random(1, 2));
+
+      if (randomColor == 1) {
+        car5Color = "blue";
+      } else {
+        car5Color = "orange";
+      }
+      randomOrientation = round(random(1, 2));
+      if (randomOrientation == 1) {
+        car5Orientation = "right";
+        car5LocX = 20 + (-1 * windowWidth) / 11;
+        car5BoardX = 0;
+        car5LocY = 20 + (5 * windowWidth) / 9.5;
+        car5BoardY = 5;
+      } else {
+        car5Orientation = "left";
+        car5LocX = 20 + (9 * windowWidth) / 11.1;
+        car5BoardX = 7;
+        car5LocY = 20 + (5 * windowWidth) / 9.5;
+        car5BoardY = 5;
+      }
+    }
+    check_gameover();
+    updateCars();
+    key_move = true;
+  }
+  if (gameover) {
+    textSize(50);
+    fill(0);
+    text("Game Over", windowWidth / 3.25, windowHeight / 2.25);
+    textSize(40);
+    text(
+      "Press Enter or say 'Yes' to play again",
+      windowWidth / 8.2,
+      windowHeight / 2
+    );
+  }
+  if (reset_player) {
+    reset_player = false;
+    reset_pos();
+  }
+}
+
+function reset_pos() {
+  score++;
+  score_sfx.play();
+  yPos = 20 + (6 * windowWidth) / 9.9;
+  boardLocY = 6;
+  FrogOrientation = "up";
+}
+
+function check_gameover() {
+  if (car1Active) {
+    if (car1BoardX == boardLocX && car1BoardY == boardLocY) {
+      gameover = true;
+      gameover_sfx.play();
+    }
+  }
+  if (car2Active) {
+    if (car2BoardX == boardLocX && car2BoardY == boardLocY) {
+      gameover = true;
+      gameover_sfx.play();
+    }
+  }
+  if (car3Active) {
+    if (car3BoardX == boardLocX && car3BoardY == boardLocY) {
+      gameover = true;
+      gameover_sfx.play();
+    }
+  }
+  if (car4Active) {
+    if (car4BoardX == boardLocX && car4BoardY == boardLocY) {
+      gameover = true;
+      gameover_sfx.play();
+    }
+  }
+  if (car5Active) {
+    if (car5BoardX == boardLocX && car5BoardY == boardLocY) {
+      gameover = true;
+      gameover_sfx.play();
+    }
+  }
+}
+
+function keyPressed() {
+  if (!mic_control && !gameover) {
+    if (boardLocY == 1) {
+      key_move = false;
+      boardLocY--;
+      yPos -= windowWidth / 10;
+      FrogOrientation = "up";
+      hop_sfx.play();
+      reset_player = true;
+    } else if (keyCode == UP_ARROW && key_move) {
+      if (boardLocY > 0) {
+        key_move = false;
+        boardLocY--;
+        yPos -= windowWidth / 10;
+        FrogOrientation = "up";
+        hop_sfx.play();
+      }
+    } else if (keyCode == DOWN_ARROW && key_move) {
+      if (boardLocY < 6) {
+        key_move = false;
+        boardLocY++;
+        yPos += windowWidth / 10;
+        FrogOrientation = "down";
+        hop_sfx.play();
+      }
+    } else if (keyCode == LEFT_ARROW && key_move) {
+      if (boardLocX > 0) {
+        key_move = false;
+        boardLocX--;
+        xPos -= windowWidth / 10;
+        FrogOrientation = "left";
+        hop_sfx.play();
+      }
+    } else if (keyCode == RIGHT_ARROW && key_move) {
+      if (boardLocX < 8) {
+        key_move = false;
+        boardLocX++;
+        xPos += windowWidth / 10;
+        FrogOrientation = "right";
+        hop_sfx.play();
+      }
+    }
+  }
+  if (gameover && keyCode == ENTER) {
+    reset_game();
+  }
+  if (!gameover) {
+    if (keyCode == SHIFT) {
+      mic_control = !mic_control;
+      if (mic_control) {
+        fr = 1;
+        frameRate(fr);
+      } else {
+        fr = 4;
+        frameRate(fr);
+      }
+    }
+  }
+}
+
+function reset_game() {
+  xPos = 20 + (4 * windowWidth) / 9.8;
+  yPos = 20 + (6 * windowWidth) / 9.9;
+  boardLocX = 4;
+  boardLocY = 6;
+
+  // cars
+  car1Active = false;
+  car2Active = false;
+  car3Active = false;
+  car4Active = false;
+  car5Active = false;
+
+  // key control
+  key_move = true;
+
+  setUpStreet();
+  gameover = false;
+  active_cars = 0;
+  score = 0;
+}
+
+function updateCars() {
+  if (car1Active) {
+    if (car1Orientation == "right" && car1Color == "blue") {
+      car1LocX += windowWidth / 10;
+      car1BoardX++;
+      image(
+        CarBlueRight,
+        car1LocX,
+        car1LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    } else if (car1Orientation == "left" && car1Color == "blue") {
+      car1LocX -= windowWidth / 10;
+      car1BoardX--;
+      image(
+        CarBlueLeft,
+        car1LocX,
+        car1LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    } else if (car1Orientation == "right" && car1Color == "orange") {
+      car1LocX += windowWidth / 10;
+      car1BoardX++;
+      image(
+        CarOrangeRight,
+        car1LocX,
+        car1LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    } else if (car1Orientation == "left" && car1Color == "orange") {
+      car1LocX -= windowWidth / 10;
+      car1BoardX--;
+      image(
+        CarOrangeLeft,
+        car1LocX,
+        car1LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    }
+    if (car1Orientation == "right") {
+      if (car1BoardX == 9) {
+        car1Active = false;
+        active_cars--;
+      }
+    } else if (car1Orientation == "left") {
+      if (car1BoardX == 0) {
+        car1Active = false;
+        active_cars--;
+      }
+    }
+  }
+  if (car2Active) {
+    if (car2Orientation == "right" && car2Color == "blue") {
+      car2LocX += windowWidth / 10;
+      car2BoardX++;
+      image(
+        CarBlueRight,
+        car2LocX,
+        car2LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    } else if (car2Orientation == "left" && car2Color == "blue") {
+      car2LocX -= windowWidth / 10;
+      car2BoardX--;
+      image(
+        CarBlueLeft,
+        car2LocX,
+        car2LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    } else if (car2Orientation == "right" && car2Color == "orange") {
+      car2LocX += windowWidth / 10;
+      car2BoardX++;
+      image(
+        CarOrangeRight,
+        car2LocX,
+        car2LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    } else if (car2Orientation == "left" && car2Color == "orange") {
+      car2LocX -= windowWidth / 10;
+      car2BoardX--;
+      image(
+        CarOrangeLeft,
+        car2LocX,
+        car2LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    }
+    if (car2Orientation == "right") {
+      if (car2BoardX == 9) {
+        car2Active = false;
+        active_cars--;
+      }
+    } else if (car2Orientation == "left") {
+      if (car2BoardX == 0) {
+        car2Active = false;
+        active_cars--;
+      }
+    }
+  }
+  if (car3Active) {
+    if (car3Orientation == "right" && car3Color == "blue") {
+      car3LocX += windowWidth / 10;
+      car3BoardX++;
+      image(
+        CarBlueRight,
+        car3LocX,
+        car3LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    } else if (car3Orientation == "left" && car3Color == "blue") {
+      car3LocX -= windowWidth / 10;
+      car3BoardX--;
+      image(
+        CarBlueLeft,
+        car3LocX,
+        car3LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    } else if (car3Orientation == "right" && car3Color == "orange") {
+      car3LocX += windowWidth / 10;
+      car3BoardX++;
+      image(
+        CarOrangeRight,
+        car3LocX,
+        car3LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    } else if (car3Orientation == "left" && car3Color == "orange") {
+      car3LocX -= windowWidth / 10;
+      car3BoardX--;
+      image(
+        CarOrangeLeft,
+        car3LocX,
+        car3LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    }
+    if (car3Orientation == "right") {
+      if (car3BoardX == 9) {
+        car3Active = false;
+        active_cars--;
+      }
+    } else if (car3Orientation == "left") {
+      if (car3BoardX == 0) {
+        car3Active = false;
+        active_cars--;
+      }
+    }
+  }
+  if (car4Active) {
+    if (car4Orientation == "right" && car4Color == "blue") {
+      car4LocX += windowWidth / 10;
+      car4BoardX++;
+      image(
+        CarBlueRight,
+        car4LocX,
+        car4LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    } else if (car4Orientation == "left" && car4Color == "blue") {
+      car4LocX -= windowWidth / 10;
+      car4BoardX--;
+      image(
+        CarBlueLeft,
+        car4LocX,
+        car4LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    } else if (car4Orientation == "right" && car4Color == "orange") {
+      car4LocX += windowWidth / 10;
+      car4BoardX++;
+      image(
+        CarOrangeRight,
+        car4LocX,
+        car4LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    } else if (car4Orientation == "left" && car4Color == "orange") {
+      car4LocX -= windowWidth / 10;
+      car4BoardX--;
+      image(
+        CarOrangeLeft,
+        car4LocX,
+        car4LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    }
+    if (car4Orientation == "right") {
+      if (car4BoardX == 9) {
+        car4Active = false;
+        active_cars--;
+      }
+    } else if (car4Orientation == "left") {
+      if (car4BoardX == 0) {
+        car4Active = false;
+        active_cars--;
+      }
+    }
+  }
+  if (car5Active) {
+    if (car5Orientation == "right" && car5Color == "blue") {
+      car5LocX += windowWidth / 10;
+      car5BoardX++;
+      image(
+        CarBlueRight,
+        car5LocX,
+        car5LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    } else if (car5Orientation == "left" && car5Color == "blue") {
+      car5LocX -= windowWidth / 10;
+      car5BoardX--;
+      image(
+        CarBlueLeft,
+        car5LocX,
+        car5LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    } else if (car5Orientation == "right" && car5Color == "orange") {
+      car5LocX += windowWidth / 10;
+      car5BoardX++;
+      image(
+        CarOrangeRight,
+        car5LocX,
+        car5LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    } else if (car5Orientation == "left" && car5Color == "orange") {
+      car5LocX -= windowWidth / 10;
+      car5BoardX--;
+      image(
+        CarOrangeLeft,
+        car5LocX,
+        car5LocY,
+        windowWidth / 12,
+        windowWidth / 18
+      );
+    }
+    if (car5Orientation == "right") {
+      if (car5BoardX == 9) {
+        car5Active = false;
+        active_cars--;
+      }
+    } else if (car5Orientation == "left") {
+      if (car5BoardX == 0) {
+        car5Active = false;
+        active_cars--;
+      }
+    }
+  }
+}
+
+// A function to run when we get any errors and the results
+function gotResult(error, results) {
+  // Display error in the console
+  if (error) {
+    console.error(error);
+  }
+  // Show the first label and confidence
+  //console.log("Label: " + results[0].label);
+  processInput(results[0].label);
+}
+
+function processInput(input) {
+  if (!gameover && mic_control) {
+    if (boardLocY == 1) {
+      key_move = false;
+      boardLocY--;
+      yPos -= windowWidth / 10;
+      FrogOrientation = "up";
+      hop_sfx.play();
+      reset_player = true;
+    } else if (input == "up") {
+      if (boardLocY > 0) {
+        key_move = false;
+        boardLocY--;
+        yPos -= windowWidth / 10;
+        FrogOrientation = "up";
+        hop_sfx.play();
+      }
+    } else if (input == "down") {
+      if (boardLocY < 6) {
+        key_move = false;
+        boardLocY++;
+        yPos += windowWidth / 10;
+        FrogOrientation = "down";
+        hop_sfx.play();
+      }
+    } else if (input == "left") {
+      if (boardLocX > 0) {
+        key_move = false;
+        boardLocX--;
+        xPos -= windowWidth / 10;
+        FrogOrientation = "left";
+        hop_sfx.play();
+      }
+    } else if (input == "right") {
+      if (boardLocX < 8) {
+        key_move = false;
+        boardLocX++;
+        xPos += windowWidth / 10;
+        FrogOrientation = "right";
+        hop_sfx.play();
+      }
+    }
+  }
+  if (gameover) {
+    if (input == "yes") {
+      reset_game();
+    }
+  }
+}
+
+function setUpStreet() {
+  clear();
+  background(150);
+  for (let i = 0; i < 9; i++) {
+    for (let j = 0; j < 7; j++) {
+      if (j == 0 || j == 6) {
+        image(
+          StreetSidewalk,
+          20 + (i * windowWidth) / 10,
+          20 + (j * windowWidth) / 10,
+          windowWidth / 10,
+          windowWidth / 10
+        );
+      } else if (j == 1) {
+        image(
+          StreetTop,
+          20 + (i * windowWidth) / 10,
+          20 + (j * windowWidth) / 10,
+          windowWidth / 10,
+          windowWidth / 10
+        );
+      } else if (j == 5) {
+        image(
+          StreetBottom,
+          20 + (i * windowWidth) / 10,
+          20 + (j * windowWidth) / 10,
+          windowWidth / 10,
+          windowWidth / 10
+        );
+      } else if (j > 1 && j < 5) {
+        image(
+          StreetMiddle,
+          20 + (i * windowWidth) / 10,
+          20 + (j * windowWidth) / 10,
+          windowWidth / 10,
+          windowWidth / 10
+        );
+      }
+    }
+  }
+  // frog
+  if (FrogOrientation == "up") {
+    image(FrogUp, xPos, yPos, windowWidth / 12, windowWidth / 12);
+  } else if (FrogOrientation == "down") {
+    image(FrogDown, xPos, yPos, windowWidth / 12, windowWidth / 12);
+  } else if (FrogOrientation == "left") {
+    image(FrogLeft, xPos, yPos, windowWidth / 12, windowWidth / 12);
+  } else if (FrogOrientation == "right") {
+    image(FrogRight, xPos, yPos, windowWidth / 12, windowWidth / 12);
+  }
+
+  // score
+  textSize(32);
+  fill(0);
+  text("Score: " + score, windowWidth / 2.45, (windowHeight * 12) / 13);
+  if (mic_control) {
+    fill(256, 0, 0);
+    text("Mic Controls", windowWidth / 9, (windowHeight * 12) / 13);
+  } else if (!mic_control) {
+    fill(256, 0, 0);
+    text(
+      "Arrow Key Controls",
+      (windowWidth * 6) / 10,
+      (windowHeight * 12) / 13
+    );
+  }
+}
